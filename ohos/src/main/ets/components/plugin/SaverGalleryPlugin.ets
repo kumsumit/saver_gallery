@@ -36,7 +36,7 @@ export default class SaverGalleryPlugin implements FlutterPlugin, MethodCallHand
   }
 
   onAttachedToEngine(binding: FlutterPluginBinding): void {
-    this.channel = new MethodChannel(binding.getBinaryMessenger(), "saver_gallery");
+    this.channel = new MethodChannel(binding.getBinaryMessenger(), "com.fluttercandies/saver_gallery");
     this.channel.setMethodCallHandler(this)
     this.applicationContext = binding.getApplicationContext();
   }

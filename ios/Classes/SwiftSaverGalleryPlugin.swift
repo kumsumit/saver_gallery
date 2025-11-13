@@ -8,7 +8,7 @@ public class SwiftSaverGalleryPlugin: NSObject, FlutterPlugin {
   var result: FlutterResult?;
 
   public static func register(with registrar: FlutterPluginRegistrar) {
-    let channel = FlutterMethodChannel(name: "saver_gallery", binaryMessenger: registrar.messenger())
+    let channel = FlutterMethodChannel(name: "com.fluttercandies/saver_gallery", binaryMessenger: registrar.messenger())
     let instance = SwiftSaverGalleryPlugin()
     registrar.addMethodCallDelegate(instance, channel: channel)
   }

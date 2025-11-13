@@ -15,7 +15,7 @@ class SaverGalleryPlugin : FlutterPlugin, MethodCallHandler {
     private var channel: MethodChannel? = null
 
     companion object {
-        private const val CHANNEL_NAME = "saver_gallery"
+        private const val CHANNEL_NAME = "com.fluttercandies/saver_gallery"
     }
 
     // Method to handle Flutter method calls.

@@ -10,7 +10,8 @@ import 'package:uuid/uuid.dart';
 
 /// A utility class for saving images and files to the device's media gallery.
 class SaverGallery {
-  static const MethodChannel _channel = MethodChannel('saver_gallery');
+  static const MethodChannel _channel =
+      MethodChannel('com.fluttercandies/saver_gallery');
   static final Uuid _uuidGenerator = Uuid();
 
   /// Saves the given image bytes to the gallery.
@@ -24,13 +25,13 @@ class SaverGallery {
   ///
   /// Returns a [SaveResult] indicating success or failure.
   static Future<SaveResult> saveImage(
-      Uint8List imageBytes, {
-        int quality = 100,
-        String? extension,
-        required String fileName,
-        String? androidRelativePath,
-        required bool skipIfExists,
-      }) async {
+    Uint8List imageBytes, {
+    int quality = 100,
+    String? extension,
+    required String fileName,
+    String? androidRelativePath,
+    required bool skipIfExists,
+  }) async {
     // Determine the MIME type and file extension.
     String? mimeType = lookupMimeType(fileName, headerBytes: imageBytes);
     extension ??= _extractFileExtension(mimeType, fileName);
@@ -41,7 +42,8 @@ class SaverGallery {
       return saveFile(
         filePath: tempFile.path,
         fileName: fileName,
-        androidRelativePath: androidRelativePath ?? _getDefaultRelativePathForType(mimeType),
+        androidRelativePath:
+            androidRelativePath ?? _getDefaultRelativePathForType(mimeType),
         skipIfExists: skipIfExists,
       );
     }
@@ -60,7 +62,8 @@ class SaverGallery {
           'quality': quality,
           'fileName': fileName,
           'extension': extension,
-          'relativePath': androidRelativePath ?? _getDefaultRelativePathForType(mimeType),
+          'relativePath':
+              androidRelativePath ?? _getDefaultRelativePathForType(mimeType),
           'skipIfExists': skipIfExists,
         },
       );
@@ -96,7 +99,8 @@ class SaverGallery {
         <String, dynamic>{
           'filePath': filePath,
           'fileName': fileName,
-          'relativePath': androidRelativePath ?? _getDefaultRelativePathForType(mimeType),
+          'relativePath':
+              androidRelativePath ?? _getDefaultRelativePathForType(mimeType),
           'skipIfExists': skipIfExists,
         },
       );
@@ -113,7 +117,8 @@ class SaverGallery {
   /// [mimeType] is the MIME type of the file.
   /// Returns the default relative path as a string based on the type of file.
   static String _getDefaultRelativePathForType(String? mimeType) {
-    if (mimeType == null) return "Download"; // Default path if MIME type is unknown.
+    if (mimeType == null)
+      return "Download"; // Default path if MIME type is unknown.
 
     if (mimeType.startsWith("image/")) {
       return "Pictures"; // Corresponds to Environment.DIRECTORY_PICTURES
@@ -143,7 +148,8 @@ class SaverGallery {
   /// [bytes] is the data to be written to the temporary file.
   static Future<File> _createTempFile(String extension, Uint8List bytes) async {
     final tempDir = await getTemporaryDirectory();
-    final tempPath = '${tempDir.path}/saver_gallery/${_uuidGenerator.v4()}.$extension';
+    final tempPath =
+        '${tempDir.path}/saver_gallery/${_uuidGenerator.v4()}.$extension';
     final tempFile = File(tempPath)..createSync(recursive: true);
     await tempFile.writeAsBytes(bytes);
     return tempFile;
