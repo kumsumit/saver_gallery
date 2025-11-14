@@ -23,6 +23,7 @@ class SaverGalleryPlugin : FlutterPlugin, MethodCallHandler {
         when (call.method) {
             "saveImageToGallery" -> handleSaveImage(call, result)
             "saveFileToGallery" -> handleSaveFile(call, result)
+            "saveFilesToGallery" -> handleSaveFiles(call, result)
             else -> result.notImplemented()
         }
     }
@@ -73,6 +74,26 @@ class SaverGalleryPlugin : FlutterPlugin, MethodCallHandler {
             filePath = filePath,
             fileName = fileName,
             relativePath = relativePath,
+            skipIfExists = skipIfExists,
+            result = result
+        )
+    }
+
+    // Handles batch saving files to the gallery.
+    private fun handleSaveFiles(call: MethodCall, result: MethodResult) {
+        val files = call.argument<List<Map<String, String>>>("files") ?: run {
+            result.error("INVALID_ARGUMENT", "files is required", null)
+            return
+        }
+        val skipIfExists = call.argument<Boolean>("skipIfExists") ?: false
+
+        if (files.isEmpty()) {
+            result.error("INVALID_ARGUMENT", "files list is empty", null)
+            return
+        }
+
+        delegate?.saveFilesToGallery(
+            files = files,
             skipIfExists = skipIfExists,
             result = result
         )
