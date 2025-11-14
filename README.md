@@ -1,26 +1,24 @@
----
-
 # Saver Gallery
 
-[![pub package](https://img.shields.io/pub/v/saver_gallery.svg)](https://pub.dartlang.org/packages/saver_gallery)  
-[![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://choosealicense.com/licenses/mit/)
-
----
+[![pub package](https://img.shields.io/pub/v/saver_gallery.svg)](https://pub.dartlang.org/packages/saver_gallery) [![GitHub stars](https://img.shields.io/github/stars/fluttercandies/saver_gallery)](https://github.com/fluttercandies/saver_gallery/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/fluttercandies/saver_gallery)](https://github.com/fluttercandies/saver_gallery/network)
+[![GitHub license](https://img.shields.io/github/license/fluttercandies/saver_gallery)](https://github.com/fluttercandies/saver_gallery/blob/master/LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/fluttercandies/saver_gallery)](https://github.com/fluttercandies/saver_gallery/issues) <a href="https://qm.qq.com/q/ZyJbSVjfSU">
+![FlutterCandies QQ 群](https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Fraw.githubusercontent.com%2Ffluttercandies%2F.github%2Frefs%2Fheads%2Fmain%2Fdata.yml&query=%24.qq_group_number&label=QQ%E7%BE%A4&logo=qq&color=1DACE8)
 
 ## Overview
 
 The `saver_gallery` plugin enables you to save images and other media files (such as videos) directly to the Android and iOS gallery. While the `image_picker` plugin allows you to select images from the gallery, it does not support saving them back to the gallery. `saver_gallery` provides this essential functionality, making it easy to save media files in Flutter applications.
 
-## already supported ohos next
-
----
+> HarmonyOS support is also included starting from version `4.0.0`.
 
 ## Features
 
 - Save images of various formats (`png`, `jpg`, `gif`, etc.) to the gallery.
 - Save video and other media files to the gallery.
+- **Batch save multiple images or files at once.**
 - Handle conditional saving with the `skipIfExists` parameter.
-- Compatible with both Android and iOS platforms.
+- Compatible with Android, iOS, and HarmonyOS platforms.
 
 ---
 
@@ -107,13 +105,13 @@ Future<bool> checkAndRequestPermissions({required bool skipIfExists}) async {
 **Explanation:**
 
 - **For Android:**
-    - **SDK 29+**: Does not require read permission for writing files.
-    - **SDK 33+**: Requires `Permission.photos` to check if a file exists.
-    - **SDK < 29**: Requires `Permission.storage` for read and write operations.
+  - **SDK 29+**: Does not require read permission for writing files.
+  - **SDK 33+**: Requires `Permission.photos` to check if a file exists.
+  - **SDK < 29**: Requires `Permission.storage` for read and write operations.
 
 - **For iOS:**
-    - Uses `Permission.photos` to check if a file exists.
-    - Uses `Permission.photosAddOnly` for saving files without needing full photo library access.
+  - Uses `Permission.photos` to check if a file exists.
+  - Uses `Permission.photosAddOnly` for saving files without needing full photo library access.
 
 ---
 
@@ -193,6 +191,38 @@ _saveVideo() async {
 - `skipIfExists`: If `true`, skips saving the file if it already exists.
 - `name`: Desired name of the file in the gallery.
 - `androidRelativePath`: Relative path in the Android gallery, e.g., `"Movies"`.
+
+---
+
+### Batch Saving
+
+Save multiple images or files at once:
+
+```dart
+import 'package:saver_gallery/saver_gallery.dart';
+
+// Batch save images
+_saveBatchImages() async {
+  final images = [
+    SaveImageData(bytes: imageBytes1, fileName: 'image1.jpg'),
+    SaveImageData(bytes: imageBytes2, fileName: 'image2.png'),
+  ];
+  
+  final result = await SaverGallery.saveImages(images, skipIfExists: false);
+  print(result);
+}
+
+// Batch save files
+_saveBatchFiles() async {
+  final files = [
+    SaveFileData(filePath: '/path/to/file1.mp4', fileName: 'video1.mp4'),
+    SaveFileData(filePath: '/path/to/file2.mp4', fileName: 'video2.mp4'),
+  ];
+  
+  final result = await SaverGallery.saveFiles(files, skipIfExists: false);
+  print(result);
+}
+```
 
 ---
 
