@@ -83,6 +83,67 @@ class SaverDelegateAndroidT(context: Context) : SaverDelegate(context) {
         }
     }
 
+    override fun saveFilesToGallery(
+        files: List<Map<String, String>>,
+        skipIfExists: Boolean,
+        result: MethodResult
+    ) {
+        mainScope.launch {
+            var successCount = 0
+            var failureCount = 0
+            val errors = mutableListOf<String>()
+
+            for (fileData in files) {
+                val filePath = fileData["filePath"] ?: continue
+                val fileName = fileData["fileName"] ?: continue
+                val relativePath = fileData["relativePath"] ?: "Download"
+
+                try {
+                    // Check if the file already exists in the gallery, if `skipIfExists` is true.
+                    if (skipIfExists && fileExistsInGallery(relativePath, fileName)) {
+                        successCount++
+                        continue
+                    }
+
+                    val file = File(filePath)
+                    val extension = file.extension
+                    val mimeType = getMIMEType(extension)
+
+                    if (mimeType.isNullOrEmpty()) {
+                        failureCount++
+                        errors.add("$fileName: Unsupported file type")
+                        continue
+                    }
+
+                    // Create a URI to save the file in the gallery.
+                    val uri = createMediaUri(extension, fileName, relativePath)
+                    val isSuccess = saveFile(file, uri)
+
+                    if (isSuccess) {
+                        // Scan and make the saved file visible in the gallery.
+                        scanUri(context, uri, mimeType)
+                        successCount++
+                    } else {
+                        failureCount++
+                        errors.add("$fileName: Failed to save file")
+                    }
+                } catch (e: Exception) {
+                    failureCount++
+                    errors.add("$fileName: ${e.message}")
+                }
+            }
+
+            val finalResult = if (failureCount == 0) {
+                SaveResultModel(true, null).toHashMap()
+            } else {
+                val errorMessage = "Saved $successCount files, failed $failureCount files. Errors: ${errors.joinToString("; ")}"
+                SaveResultModel(successCount > 0, errorMessage).toHashMap()
+            }
+
+            result.success(finalResult)
+        }
+    }
+
     // Saves the image to the given URI.
     private fun saveImage(imageBytes: ByteArray, quality: Int, extension: String, uri: Uri): Boolean {
         return try {

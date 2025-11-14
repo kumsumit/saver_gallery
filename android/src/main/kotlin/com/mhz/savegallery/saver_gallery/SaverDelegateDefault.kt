@@ -79,6 +79,53 @@ class SaverDelegateDefault(context: Context) : SaverDelegate(context) {
     }
 
     /**
+     * Saves multiple files to the gallery in batch.
+     *
+     * @param files List of file data maps containing filePath, fileName, and relativePath.
+     * @param skipIfExists If true, skips saving if a file already exists.
+     * @param result The method result to communicate success or failure.
+     */
+    override fun saveFilesToGallery(
+        files: List<Map<String, String>>,
+        skipIfExists: Boolean,
+        result: MethodChannel.Result
+    ) {
+        mainScope.launch {
+            var successCount = 0
+            var failureCount = 0
+            val errors = mutableListOf<String>()
+
+            for (fileData in files) {
+                val filePath = fileData["filePath"] ?: continue
+                val fileName = fileData["fileName"] ?: continue
+                val relativePath = fileData["relativePath"] ?: "Download"
+
+                val saveResult = saveFile(filePath, fileName, relativePath, skipIfExists)
+                val isSuccess = saveResult["isSuccess"] as? Boolean ?: false
+
+                if (isSuccess) {
+                    successCount++
+                } else {
+                    failureCount++
+                    val errorMsg = saveResult["errorMessage"] as? String
+                    if (errorMsg != null) {
+                        errors.add("$fileName: $errorMsg")
+                    }
+                }
+            }
+
+            val finalResult = if (failureCount == 0) {
+                SaveResultModel(true, null).toHashMap()
+            } else {
+                val errorMessage = "Saved $successCount files, failed $failureCount files. Errors: ${errors.joinToString("; ")}"
+                SaveResultModel(successCount > 0, errorMessage).toHashMap()
+            }
+
+            result.success(finalResult)
+        }
+    }
+
+    /**
      * Saves an image to the gallery with the specified parameters.
      *
      * @param imageBytes The image data in bytes.

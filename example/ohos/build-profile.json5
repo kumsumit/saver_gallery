@@ -36,6 +36,18 @@
           ]
         }
       ]
+    },
+    {
+      "name": "saver_gallery",
+      "srcPath": "../../ohos",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
     }
   ]
 }

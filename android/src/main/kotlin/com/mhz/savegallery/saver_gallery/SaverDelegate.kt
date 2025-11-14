@@ -25,5 +25,11 @@ abstract class SaverDelegate(protected val context: Context) {
         result: MethodResult
     )
 
+    abstract fun saveFilesToGallery(
+        files: List<Map<String, String>>,
+        skipIfExists: Boolean,
+        result: MethodResult
+    )
+
     open fun onClose() {}
 }

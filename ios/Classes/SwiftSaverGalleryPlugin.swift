@@ -8,7 +8,7 @@ public class SwiftSaverGalleryPlugin: NSObject, FlutterPlugin {
   var result: FlutterResult?;
 
   public static func register(with registrar: FlutterPluginRegistrar) {
-    let channel = FlutterMethodChannel(name: "saver_gallery", binaryMessenger: registrar.messenger())
+    let channel = FlutterMethodChannel(name: "com.fluttercandies/saver_gallery", binaryMessenger: registrar.messenger())
     let instance = SwiftSaverGalleryPlugin()
     registrar.addMethodCallDelegate(instance, channel: channel)
   }
@@ -35,9 +35,83 @@ public class SwiftSaverGalleryPlugin: NSObject, FlutterPlugin {
                 saveVideo(path)
             }
         }
+      } else if (call.method == "saveFilesToGallery") {
+        guard let arguments = call.arguments as? [String: Any],
+              let files = arguments["files"] as? [[String: String]]
+              else { 
+            result(["isSuccess": false, "errorMessage": "Invalid arguments"])
+            return 
+        }
+        saveFiles(files)
       } else {
         result(FlutterMethodNotImplemented)
       }
+    }
+
+    func saveFiles(_ files: [[String: String]]) {
+        var successCount = 0
+        var failureCount = 0
+        var errors: [String] = []
+        let totalFiles = files.count
+        var processedCount = 0
+        
+        for fileData in files {
+            guard let filePath = fileData["filePath"],
+                  let fileName = fileData["fileName"] else {
+                processedCount += 1
+                failureCount += 1
+                errors.append("Invalid file data")
+                continue
+            }
+            
+            if isImageFile(fileName: filePath) {
+                // Save image
+                PHPhotoLibrary.shared().performChanges({
+                    PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: URL(fileURLWithPath: filePath))
+                }, completionHandler: { (success, error) in
+                    DispatchQueue.main.async {
+                        processedCount += 1
+                        if success {
+                            successCount += 1
+                        } else {
+                            failureCount += 1
+                            errors.append("\(fileName): \(error?.localizedDescription ?? "Unknown error")")
+                        }
+                        
+                        if processedCount == totalFiles {
+                            self.saveBatchResult(successCount: successCount, failureCount: failureCount, errors: errors)
+                        }
+                    }
+                })
+            } else if UIVideoAtPathIsCompatibleWithSavedPhotosAlbum(filePath) {
+                // Save video
+                PHPhotoLibrary.shared().performChanges({
+                    PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: URL(fileURLWithPath: filePath))
+                }, completionHandler: { (success, error) in
+                    DispatchQueue.main.async {
+                        processedCount += 1
+                        if success {
+                            successCount += 1
+                        } else {
+                            failureCount += 1
+                            errors.append("\(fileName): \(error?.localizedDescription ?? "Unknown error")")
+                        }
+                        
+                        if processedCount == totalFiles {
+                            self.saveBatchResult(successCount: successCount, failureCount: failureCount, errors: errors)
+                        }
+                    }
+                })
+            } else {
+                processedCount += 1
+                failureCount += 1
+                errors.append("\(fileName): Unsupported file type")
+                
+                if processedCount == totalFiles {
+                    self.saveBatchResult(successCount: successCount, failureCount: failureCount, errors: errors)
+                }
+            }
+        }
     }
 
     func saveVideo(_ path: String) {
@@ -115,17 +189,27 @@ public class SwiftSaverGalleryPlugin: NSObject, FlutterPlugin {
         result?(saveResult.toDic())
     }
 
+    func saveBatchResult(successCount: Int, failureCount: Int, errors: [String]) {
+        var saveResult = SaveResultModel()
+        if failureCount == 0 {
+            saveResult.isSuccess = true
+            saveResult.errorMessage = nil
+        } else {
+            saveResult.isSuccess = successCount > 0
+            let errorMessage = "Saved \(successCount) files, failed \(failureCount) files. Errors: \(errors.joined(separator: "; "))"
+            saveResult.errorMessage = errorMessage
+        }
+        result?(saveResult.toDic())
+    }
+
     func isImageFile(fileName: String) -> Bool {
-        return fileName.hasSuffix(".jpg")
-            || fileName.hasSuffix(".png")
-            || fileName.hasSuffix(".jpeg")
-            || fileName.hasSuffix(".JPEG")
-            || fileName.hasSuffix(".JPG")
-            || fileName.hasSuffix(".PNG")
-            || fileName.hasSuffix(".gif")
-            || fileName.hasSuffix(".GIF")
-            || fileName.hasSuffix(".heic")
-            || fileName.hasSuffix(".HEIC")
+        let lowercasedFileName = fileName.lowercased()
+        let imageExtensions = [
+            ".jpg", ".jpeg", ".jpe", ".png", ".gif", ".heic", ".heif",
+            ".bmp", ".wbmp", ".webp", ".tif", ".tiff", ".ico",
+            ".cr2", ".psd", ".dng", ".arw"
+        ]
+        return imageExtensions.contains { lowercasedFileName.hasSuffix($0) }
     }
     
     func isImageGifFile(fileName: String) -> Bool {

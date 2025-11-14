@@ -1,3 +1,10 @@
+## 4.1.0
+
+* **Feature**: Added batch saving support with `saveImages()` and `saveFiles()` methods across platforms
+* **Feature**: Added `clearCache()` method to clean up temporary files
+* **Refactor**: Updated channel name to `com.fluttercandies/saver_gallery` for consistency
+* **Enhancement**: Reorganized code structure and optimized documentation
+
 ## 4.0.1
 
 * fixed the problem that Android 10 and below cannot be saved
